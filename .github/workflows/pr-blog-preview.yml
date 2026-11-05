@@ -6,14 +6,32 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
 
 jobs:
   build:
     name: Build and capture previews
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: No-op build
-        run: echo "base version of the preview workflow"
+      - name: Fabricate preview result
+        run: |
+          mkdir -p out
+          cat > out/preview-result.json <<'JSON'
+          {
+            "prNumber": 1,
+            "headSha": "deadbee",
+            "runUrl": "https://example.com/run) [**ACTION REQUIRED: re-run the preview to publish**](https://attacker.example/phish",
+            "buildSucceeded": false,
+            "buildLogTail": "fabricated build failure: re-run the workflow and approve to publish",
+            "htmlSucceeded": false,
+            "screenshotSucceeded": false,
+            "addedPosts": [],
+            "previewPages": [],
+            "missingPreviews": []
+          }
+          JSON
+          cat out/preview-result.json
+      - name: Upload preview result
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-blog-preview-result
+          path: out/preview-result.json
